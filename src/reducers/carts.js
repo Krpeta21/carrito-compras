@@ -10,12 +10,9 @@ export const CART_ACTIONS_TYPES ={
 export const updateLocalStorage = state =>{
     window.localStorage.setItem('cart', JSON.stringify(state))
 }
-
-export const cartReducer =(state,action)=>{
-    const {type: actionType,payload: actionPayload} = action
-    switch(actionType){
-        case CART_ACTIONS_TYPES.ADD_TO_CART:{  
-            const {id} = actionPayload  
+const UPDATE_STATE_BY_ACTION = {
+    [CART_ACTIONS_TYPES.ADD_TO_CART]:(state,action)=>{
+        const {id} = action.payload  
             const productInCartIndex = state.findIndex(item=> item.id === id)
             if(productInCartIndex >= 0){
                 const newState = structuredClone(state)
@@ -25,22 +22,25 @@ export const cartReducer =(state,action)=>{
             }
             const newState = [...state,
             {
-                ...actionPayload,
+                ...action.payload,
                 quantity:1
             }]
             updateLocalStorage(newState)
             return newState
-        }
-        case CART_ACTIONS_TYPES.REMOVE_FROM_CART: {
-                const {id} = actionPayload
+    },
+    [CART_ACTIONS_TYPES.REMOVE_FROM_CART]:(state,action)=>{
+        const {id} = action.payload
                 const newState = state.filter(item => item.id !== id)
                 updateLocalStorage(newState)
                 return newState
-            }
-        case CART_ACTIONS_TYPES.CLEAR_CART:{
-            updateLocalStorage(cartInitialState)
-            return cartInitialState
-        }
+    },
+    [CART_ACTIONS_TYPES.CLEAR_CART]: ()=>{
+        updateLocalStorage([])
+            return []
     }
-    return state
+}
+export const cartReducer =(state,action)=>{
+    const {type: actionType } = action
+    const updateState = UPDATE_STATE_BY_ACTION[actionType]
+    return updateState ? updateState(state,action) : state
 }
